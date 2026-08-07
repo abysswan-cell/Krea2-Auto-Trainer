@@ -1,127 +1,67 @@
 """
-Dataset Analyzer
-Krea2 Auto Trainer
+Dataset Loader
+
+Only responsible for reading datasets.
 """
 
 from pathlib import Path
 from PIL import Image
 
-from .logger import logger
 from .constants import IMAGE_EXTENSIONS
 
 
-class DatasetAnalyzer:
+class Dataset:
 
-    def __init__(self, dataset_path):
+    def __init__(self, root):
 
-        self.dataset_path = Path(dataset_path)
+        self.root = Path(root)
 
         self.images = []
 
         self.captions = []
 
-    # ----------------------------------------
+    # -----------------------------------------
 
-    def scan_images(self):
+    def load(self):
 
         self.images.clear()
+
+        self.captions.clear()
 
         for ext in IMAGE_EXTENSIONS:
 
             self.images.extend(
-                self.dataset_path.rglob(f"*{ext}")
+                sorted(self.root.rglob(f"*{ext}"))
             )
-
-        self.images = sorted(self.images)
-
-        logger.info(f"Found {len(self.images)} images.")
-
-        return self.images
-
-    # ----------------------------------------
-
-    def scan_captions(self):
-
-        self.captions.clear()
-
-        missing = []
 
         for image in self.images:
 
             txt = image.with_suffix(".txt")
 
-            if txt.exists():
+            self.captions.append(txt)
 
-                self.captions.append(txt)
+        return self
 
-            else:
+    # -----------------------------------------
 
-                missing.append(image)
-
-        logger.info(f"Found {len(self.captions)} captions.")
-
-        return missing
-
-    # ----------------------------------------
-
-    def verify_images(self):
-
-        broken = []
-
-        for image in self.images:
-
-            try:
-
-                img = Image.open(image)
-
-                img.verify()
-
-            except Exception:
-
-                broken.append(image)
-
-        logger.info(f"Broken images: {len(broken)}")
-
-        return broken
-
-    # ----------------------------------------
-
-    def image_sizes(self):
-
-        sizes = []
-
-        for image in self.images:
-
-            img = Image.open(image)
-
-            sizes.append(img.size)
-
-        return sizes
-
-    # ----------------------------------------
-
-    def count(self):
+    def __len__(self):
 
         return len(self.images)
 
-    # ----------------------------------------
+    # -----------------------------------------
 
-    def summary(self):
+    def image(self, index):
 
-        self.scan_images()
+        return self.images[index]
 
-        missing = self.scan_captions()
+    # -----------------------------------------
 
-        broken = self.verify_images()
+    def caption(self, index):
 
-        return {
+        return self.captions[index]
 
-            "images": len(self.images),
+    # -----------------------------------------
 
-            "captions": len(self.captions),
+    def open(self, index):
 
-            "missing_caption": len(missing),
-
-            "broken_images": len(broken),
-
-        }
+        return Image.open(self.images[index])
