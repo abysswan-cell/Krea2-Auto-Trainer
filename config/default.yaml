@@ -1,1 +1,6 @@
+project:
+  name: Krea2 Auto Trainer
+  version: 1.0.0
 
+training:
+  model: Krea-2-Raw
